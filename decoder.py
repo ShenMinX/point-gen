@@ -40,13 +40,13 @@ class Attention(nn.Module):
         return attn
 
 class Decoder(nn.Module):
-    def __init__(self, vocab_size, encode_size = 60, hidden_size = 30, embed_size = 20):
+    def __init__(self, vocab, encode_size = 60, hidden_size = 30, embed_size = 20):
         super(Decoder, self).__init__()
         
-        self.vocab_size = vocab_size
+        self.vocab_size = len(vocab)
         self.hidden_size = hidden_size
 
-        self.embedding = torch.nn.Embedding(num_embeddings = vocab_size, embedding_dim = embed_size, padding_idx=3)
+        self.embedding = torch.nn.Embedding(num_embeddings = self.vocab_size, embedding_dim = embed_size, padding_idx=vocab["<pad>"])
 
         self.lstm = nn.LSTM(input_size = embed_size + encode_size, hidden_size = hidden_size, bidirectional=False, batch_first=True)
 
@@ -56,7 +56,7 @@ class Decoder(nn.Module):
         self.ws = nn.Parameter(torch.rand(hidden_size), requires_grad = True)
         self.wx = nn.Parameter(torch.rand(embed_size), requires_grad = True)
 
-        self.v = nn.Linear(hidden_size, vocab_size)
+        self.v = nn.Linear(hidden_size, self.vocab_size)
     
     def forward(self, coverage, enc_out, rnn_hid, dec_input, enc_inputs, attn):
         
@@ -109,15 +109,7 @@ if __name__=="__main__":
     encode_inputs = torch.LongTensor(5, 7).random_(0, vocab_size)
     decoder_input = torch.ones(5, 1, dtype=torch.long)
 
-    my_decoder = Decoder(vocab_size=vocab_size, encode_size=6, hidden_size=3, embed_size=5)
 
-    rnn_hid = (torch.zeros(1,5,3),torch.zeros(1,5,3)) # default init_value
-
-    output, coverage, rnn_hid, attn = my_decoder(coverage, enc_out, rnn_hid, decoder_input, encode_inputs, attn)
-    output, coverage, rnn_hid, attn = my_decoder(coverage, enc_out, rnn_hid, decoder_input, encode_inputs, attn)
-    print(output.size(), coverage.size(), attn.size())
-    print(output)
-    print(attn)
 
 
 

@@ -39,12 +39,12 @@ if __name__ == '__main__':
     test_loader = data.DataLoader(dataset=test_data, batch_size=32, shuffle=False)
     
     model_encoder = Encoder(
-                      vocab_size=len(tr_dict.word_to_ix), 
+                      vocab=tr_dict.word_to_ix, 
                       hidden_size=enc_hid_size, 
                       embed_size=enc_embed_size)
 
     model_decoder = Decoder(
-                      vocab_size=len(tr_dict.word_to_ix), 
+                      vocab=tr_dict.word_to_ix, 
                       encode_size=enc_hid_size*2, 
                       hidden_size=dec_hid_size, 
                       embed_size=dec_embed_size
