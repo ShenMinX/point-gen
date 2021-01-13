@@ -37,12 +37,12 @@ if __name__ == '__main__':
     test_loader = data.DataLoader(dataset=test_data, batch_size=32, shuffle=False)
     
     model_encoder = Encoder(
-                      vocab_size=len(tr_dict.word_to_ix), 
+                      vocab=tr_dict.word_to_ix, 
                       hidden_size=enc_hid_size, 
                       embed_size=enc_embed_size)
 
     model_decoder = Decoder(
-                      vocab_size=len(tr_dict.word_to_ix), 
+                      vocab=tr_dict.word_to_ix, 
                       encode_size=enc_hid_size*2, 
                       hidden_size=dec_hid_size, 
                       embed_size=dec_embed_size
@@ -76,7 +76,9 @@ if __name__ == '__main__':
             batch_loss = 0.0
             for i in range(max_tl):
 
-                output, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
+                unnormalized_out, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
+
+                output = torch.softmax(unnormalized_out, 1) # batch x 1 x hidden_size -> batch x vocab_size
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
@@ -85,7 +87,7 @@ if __name__ == '__main__':
                 else:
                     dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(output, target[:,i])
+                p_step_loss = criterion(unnormalized_out, target[:,i])
 
                 batch_loss = batch_loss + p_step_loss
             
@@ -129,7 +131,9 @@ if __name__ == '__main__':
             batch_loss = 0.0
             for i in range(max_tl):
 
-                output,rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
+                unnormalized_out, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
+
+                output = torch.softmax(unnormalized_out, 1) # batch x 1 x hidden_size -> batch x vocab_size
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
@@ -137,7 +141,7 @@ if __name__ == '__main__':
 
                 dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(output, target[:,i])
+                p_step_loss = criterion(unnormalized_out, target[:,i])
 
                 batch_loss = batch_loss + p_step_loss 
 

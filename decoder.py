@@ -36,13 +36,13 @@ class Attention(nn.Module):
         return attn
 
 class Decoder(nn.Module):
-    def __init__(self, vocab_size, encode_size = 60, hidden_size = 30, embed_size = 20):
+    def __init__(self, vocab, encode_size = 60, hidden_size = 30, embed_size = 20):
         super(Decoder, self).__init__()
         
-        self.vocab_size = vocab_size
+        self.vocab_size = len(vocab)
         self.hidden_size = hidden_size
 
-        self.embedding = torch.nn.Embedding(num_embeddings = vocab_size, embedding_dim = embed_size, padding_idx=3)
+        self.embedding = torch.nn.Embedding(num_embeddings = self.vocab_size, embedding_dim = embed_size, padding_idx=vocab['<pad>'])
 
         self.lstm = nn.LSTM(input_size = embed_size + encode_size, hidden_size = hidden_size, bidirectional=False, batch_first=True)
 
@@ -52,7 +52,7 @@ class Decoder(nn.Module):
         self.ws = nn.Parameter(torch.rand(hidden_size), requires_grad = True)
         self.wx = nn.Parameter(torch.rand(embed_size), requires_grad = True)
 
-        self.v = nn.Linear(hidden_size, vocab_size)
+        self.v = nn.Linear(hidden_size, self.vocab_size)
     
     def forward(self, enc_out, rnn_hid, dec_input, enc_inputs, attn):
         
@@ -70,16 +70,16 @@ class Decoder(nn.Module):
 
         rnn_out, rnn_hid = self.lstm(ctxt_embed, rnn_hid)
 
-        p_vocab = torch.softmax(self.v(rnn_out.squeeze()), 1) # batch x 1 x hidden_size -> batch x vocab_size
+        unnormalized_out = self.v(rnn_out.squeeze())
 
         attn = self.attn(enc_out, rnn_out)
         
         attn_scores = torch.zeros(batch_size, self.vocab_size)
         attn_scores = attn_scores.scatter_(1, enc_inputs, attn) # index: enc_inputs, content: attn 
 
-        output = p_vocab # batch x vocab_size
+# batch x vocab_size
 
-        return output, rnn_hid, attn
+        return unnormalized_out, rnn_hid, attn
 
 
         

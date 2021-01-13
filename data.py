@@ -39,7 +39,7 @@ def words_to_ixs(word_to_ix, words):
     return out
     
 
-def raw_data(file_path = 'en\\train.tsv'):
+def raw_data(file_path = 'en\\test_2k.tsv'):
 
     my_dictionary = dictionary()
     sents = []
@@ -94,9 +94,8 @@ class Dataset(data.Dataset):
 
         return (sent, target)
 
-    def padding(self, sent, max_len):
-        sen_len = min([max_len, len(sent)])
-        sen_pad = np.pad(sent,(0,max(0, max_len - sen_len)),'constant', constant_values = (self.pad))[:max_len]
+    def padding(self, sent, max_len):      
+        sen_pad = np.pad(sent,(0,max(0, max_len - len(sent))),'constant', constant_values = (self.pad))[:max_len]
         return sen_pad
 
 
