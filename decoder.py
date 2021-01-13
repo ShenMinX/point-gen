@@ -44,8 +44,7 @@ class Decoder(nn.Module):
 
         self.embedding = torch.nn.Embedding(num_embeddings = self.vocab_size, embedding_dim = embed_size, padding_idx=vocab['<pad>'])
 
-        self.lstm = nn.LSTM(input_size = embed_size + encode_size, hidden_size = hidden_size, bidirectional=False, batch_first=True)
-
+        self.lstm = nn.LSTMCell(input_size = embed_size + encode_size, hidden_size = hidden_size)
         self.attn = Attention(encode_size = encode_size, hidden_size=hidden_size)
 
         self.wh = nn.Parameter(torch.rand(encode_size), requires_grad = True)
@@ -66,11 +65,14 @@ class Decoder(nn.Module):
 
         embed = self.embedding(dec_input) # input: batch x 1 
     
-        ctxt_embed = torch.cat([context, embed], 2)
+        ctxt_embed = torch.cat([context, embed], 2).view(batch_size, -1)
 
-        rnn_out, rnn_hid = self.lstm(ctxt_embed, rnn_hid)
+        h_t, c_t = self.lstm(ctxt_embed, rnn_hid)
 
-        unnormalized_out = self.v(rnn_out.squeeze())
+        rnn_hid = (h_t,c_t)
+        rnn_out = h_t
+
+        unnormalized_out = self.v(rnn_out)
 
         attn = self.attn(enc_out, rnn_out)
         
