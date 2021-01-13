@@ -98,15 +98,6 @@ if __name__=="__main__":
     encode_inputs = torch.LongTensor(5, 7).random_(0, vocab_size)
     decoder_input = torch.ones(5, 1, dtype=torch.long)
 
-    my_decoder = Decoder(vocab_size=vocab_size, encode_size=6, hidden_size=3, embed_size=5)
-
-    rnn_hid = (torch.zeros(1,5,3),torch.zeros(1,5,3)) # default init_value
-
-    output, rnn_hid, attn = my_decoder( enc_out, rnn_hid, decoder_input, encode_inputs, attn)
-    output, rnn_hid, attn = my_decoder(enc_out, rnn_hid, decoder_input, encode_inputs, attn)
-    print(output.size(),  attn.size())
-    print(output)
-    print(attn)
 
 
 
