@@ -72,7 +72,7 @@ if __name__ == '__main__':
             dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).view(batch_size, 1)
 
             with torch.no_grad():
-                rnn_hid = (torch.zeros(1,batch_size,dec_hid_size),torch.zeros(1,batch_size,dec_hid_size)) # default init_hidden_value
+                rnn_hid = (torch.zeros(batch_size,dec_hid_size),torch.zeros(batch_size,dec_hid_size)) # default init_hidden_value
                 attn = torch.ones(batch_size, max_sl) # init_attn
                 coverage = torch.zeros(batch_size, max_sl) # init_coverage
             
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
             dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).view(batch_size, 1)
 
-            rnn_hid = (torch.zeros(1,batch_size,dec_hid_size),torch.zeros(1,batch_size,dec_hid_size)) # default init_hidden_value
+            rnn_hid = (torch.zeros(batch_size,dec_hid_size),torch.zeros(batch_size,dec_hid_size)) # default init_hidden_value
             
             attn = torch.ones(batch_size, max_sl) # init_attn
             coverage = torch.zeros(batch_size, max_sl) # init_coverage

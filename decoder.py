@@ -48,7 +48,7 @@ class Decoder(nn.Module):
 
         self.embedding = torch.nn.Embedding(num_embeddings = self.vocab_size, embedding_dim = embed_size, padding_idx=vocab["<pad>"])
 
-        self.lstm = nn.LSTM(input_size = embed_size + encode_size, hidden_size = hidden_size, bidirectional=False, batch_first=True)
+        self.lstm = nn.LSTMCell(input_size = embed_size + encode_size, hidden_size = hidden_size)
 
         self.attn = Attention(encode_size = encode_size, hidden_size=hidden_size)
 
@@ -70,12 +70,16 @@ class Decoder(nn.Module):
 
         embed = self.embedding(dec_input) # input: batch x 1 
     
-        ctxt_embed = torch.cat([context, embed], 2)
+        ctxt_embed = torch.cat([context, embed], 2).view(batch_size, -1)
 
-        rnn_out, rnn_hid = self.lstm(ctxt_embed, rnn_hid)
+        h_t, c_t = self.lstm(ctxt_embed, rnn_hid)
 
-        p_vocab = torch.softmax(self.v(rnn_out.squeeze()), 1) # batch x 1 x hidden_size -> batch x vocab_size
-        p_gen = torch.sigmoid(torch.matmul(context, self.wh) + torch.matmul(rnn_out, self.ws) + torch.matmul(embed, self.wx)) # batch x 1
+        rnn_out = h_t
+
+        rnn_hid = (h_t, c_t)
+
+        p_vocab = torch.softmax(self.v(rnn_out), 1) # batch x 1 x hidden_size -> batch x vocab_size
+        p_gen = torch.sigmoid(torch.matmul(context, self.wh) + torch.matmul(rnn_out.view(batch_size, 1, -1), self.ws) + torch.matmul(embed, self.wx)) # batch x 1
 
         attn = self.attn(coverage, enc_out, rnn_out)
 
