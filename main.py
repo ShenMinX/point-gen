@@ -157,7 +157,7 @@ if __name__ == '__main__':
 
                 dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(output, target[:,i])
+                p_step_loss = criterion(torch.log(output), target[:,i])
 
                 batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
 
