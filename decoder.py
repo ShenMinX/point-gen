@@ -106,8 +106,8 @@ if __name__=="__main__":
     rnn_out = torch.rand(5, 1, 3)
 
     my_attn = Attention(encode_size=6, hidden_size=3)
-    attn, coverage = my_attn(coverage, enc_out, rnn_out)
-    print(attn.size(), coverage.size())
+    attn = my_attn(coverage, enc_out, rnn_out)
+    print(attn.size())
     
     vocab_size = 12
     encode_inputs = torch.LongTensor(5, 7).random_(0, vocab_size)

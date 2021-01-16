@@ -6,8 +6,8 @@ import random
 from data import raw_data, Dataset
 import torch.utils.data as data
 
-# from rouge import rouge_n_summary_level
-# from rouge import rouge_l_summary_level
+from rouge import rouge_n_summary_level
+from rouge import rouge_l_summary_level
 
 from encoder import Encoder
 from decoder import Decoder
@@ -179,11 +179,11 @@ if __name__ == '__main__':
             final_targets.append(final_target)
 
         # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
-        # _, _, rouge_1 = rouge_n_summary_level(final_preds, final_targets, 1)
-        # print('ROUGE-1: %f' % rouge_1)
+        _, _, rouge_1 = rouge_n_summary_level(final_preds, final_targets, 1)
+        print('ROUGE-1: %f' % rouge_1)
 
-        # _, _, rouge_2 = rouge_n_summary_level(final_preds, final_targets, 2)
-        # print('ROUGE-2: %f' % rouge_2)
+        _, _, rouge_2 = rouge_n_summary_level(final_preds, final_targets, 2)
+        print('ROUGE-2: %f' % rouge_2)
         
         # _, _, rouge_l = rouge_l_summary_level(final_preds, final_targets) # extremely time consuming...
         # print('ROUGE-L: %f' % rouge_l)
