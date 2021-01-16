@@ -21,17 +21,16 @@ if __name__ == '__main__':
     dec_embed_size = 128
     enc_hid_size = 256  # out_size = 200
     dec_hid_size = 256
-    max_sl = 6  # max sentence length
-    max_tl = 6  # max target length
-    learning_rate = 0.0015
+
+    learning_rate = 0.015
 
     epochs = 10
 
     tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
-    train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix, max_sl=max_sl, max_tl=max_tl)
+    train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix)  #, max_sl=max_sl, max_tl=max_tl
 
     _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
-    test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix, max_sl=max_sl, max_tl=max_tl) # use train_dictionary!
+    test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary! #, max_sl=max_sl, max_tl=max_tl
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False)
     test_loader = data.DataLoader(dataset=test_data, batch_size=32, shuffle=False)
@@ -61,6 +60,13 @@ if __name__ == '__main__':
         for idx, item in enumerate(train_loader):
             
             enc_input, target = [i.type(torch.LongTensor) for i in item]
+
+            enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+            target = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+            max_sl = enc_input.shape[1]  # max sentence length
+            max_tl = target.shape[1]     # max target length
 
             enc_out, enc_hidden = model_encoder(enc_input)
 
@@ -114,6 +120,13 @@ if __name__ == '__main__':
         for idx, item in enumerate(test_loader):        
         
             enc_input, target = [i.type(torch.LongTensor) for i in item]
+
+            enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+            target = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+            max_sl = enc_input.shape[1]  # max sentence length
+            max_tl = target.shape[1]     # max target length
 
             targets = torch.cat([targets, target], dim=0)
 
