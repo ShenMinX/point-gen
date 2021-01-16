@@ -32,10 +32,10 @@ if __name__ == '__main__':
 
     epochs = 10
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\dev_2k.tsv')
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\dev_2k.tsv')
+    _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False, collate_fn=my_collate)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
                 else:
                     dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(torch.log(output), target[:,i])
+                p_step_loss = -torch.log(-criterion(output, target[:,i]))
 
                 batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
             
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
                 dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(torch.log(output), target[:,i])
+                p_step_loss = -torch.log(-criterion(output, target[:,i]))
 
                 batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
 
@@ -178,8 +178,7 @@ if __name__ == '__main__':
                 
         print('test set total loss: %f, total coverage loss: %f '% (total_loss, total_coverage_loss))
 
-        print(final_preds)
-        # for pseudo_data, suppose output [[4,2],...,[4,2]]        
+        print(final_preds)# for pseudo_data, suppose output [[5,2],...,[5,2]]        
         # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
         _, _, rouge_1 = rouge_n_summary_level(final_preds, final_targets, 1)
         print('ROUGE-1: %f' % rouge_1)
