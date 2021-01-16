@@ -166,7 +166,7 @@ if __name__ == '__main__':
         print('test set total loss: %f '% (total_loss))
         final_preds = []
         final_targets = []
-        print(preds) # for pseudo_data, suppose output [[5, 1, 3, 3,...,3],...,[5, 1, 3, 3,...,3]]
+        print(preds) # for pseudo_data, suppose output [[4, 2],...,[4, 2]]
         # unpad for evaluation
         for i in range(batch_size):
             final_pred = preds[i,:][preds[i,:]!=tr_dict.word_to_ix['<pad>']].tolist()
