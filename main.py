@@ -12,6 +12,10 @@ from rouge import rouge_l_summary_level
 from encoder import Encoder
 from decoder import Decoder
 
+def my_collate(batch):
+    sent = [torch.LongTensor(item[0]) for item in batch]
+    target = [torch.LongTensor(item[1]) for item in batch]
+    return [sent, target]
 
 if __name__ == '__main__':
     
@@ -32,8 +36,8 @@ if __name__ == '__main__':
     _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary! #, max_sl=max_sl, max_tl=max_tl
     
-    train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False)
-    test_loader = data.DataLoader(dataset=test_data, batch_size=32, shuffle=False)
+    train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False, collate_fn=my_collate)
+    test_loader = data.DataLoader(dataset=test_data, batch_size=32, shuffle=False, collate_fn=my_collate)
     
     model_encoder = Encoder(
                       vocab=tr_dict.word_to_ix, 
@@ -59,11 +63,11 @@ if __name__ == '__main__':
 
         for idx, item in enumerate(train_loader):
             
-            enc_input, target = [i.type(torch.LongTensor) for i in item]
+            enc_input, target = [i for i in item]
 
             enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
 
-            target = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+            target = nn.utils.rnn.pad_sequence(target, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
 
             max_sl = enc_input.shape[1]  # max sentence length
             max_tl = target.shape[1]     # max target length
@@ -114,21 +118,19 @@ if __name__ == '__main__':
     # test
     with torch.no_grad():
         total_loss = 0.0
-        preds = torch.tensor([],dtype=torch.long)
-        targets = torch.tensor([],dtype=torch.long)
+        final_preds = []
+        final_targets = []
         
         for idx, item in enumerate(test_loader):        
         
-            enc_input, target = [i.type(torch.LongTensor) for i in item]
+            enc_input, target = [i for i in item]
 
             enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
 
-            target = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+            target = nn.utils.rnn.pad_sequence(target, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
 
             max_sl = enc_input.shape[1]  # max sentence length
             max_tl = target.shape[1]     # max target length
-
-            targets = torch.cat([targets, target], dim=0)
 
             enc_out, enc_hidden = model_encoder(enc_input)
 
@@ -161,19 +163,17 @@ if __name__ == '__main__':
             
             total_loss += batch_loss
 
-            preds = torch.cat([preds,pred], dim=0)
 
-        print('test set total loss: %f '% (total_loss))
-        final_preds = []
-        final_targets = []
-        print(preds) # for pseudo_data, suppose output [[4, 2],...,[4, 2]]
         # unpad for evaluation
-        for i in range(batch_size):
-            final_pred = preds[i,:][preds[i,:]!=tr_dict.word_to_ix['<pad>']].tolist()
+        for b in range(batch_size):
+            final_pred = pred[b,:][pred[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
             final_preds.append(final_pred)
-            final_target = targets[i,:][targets[i,:]!=tr_dict.word_to_ix['<pad>']].tolist()
+            final_target = target[b,:][target[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
             final_targets.append(final_target)
-
+        
+        print('test set total loss: %f '% (total_loss))
+        
+        print(final_targets) # for pseudo_data, suppose output [[4, 2],...,[4, 2]]
         # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
         _, _, rouge_1 = rouge_n_summary_level(final_preds, final_targets, 1)
         print('ROUGE-1: %f' % rouge_1)

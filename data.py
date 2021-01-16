@@ -89,10 +89,6 @@ class Dataset(data.Dataset):
         target = self.targets[index] + ['<eos>']
 
         sent, target = list(map(lambda x: words_to_ixs(self.word_to_ix, x),[sent, target]))
-        sent = np.array(sent)
-        target = np.array(target)
-        # sent = self.padding(sent, self.max_sl)
-        # target = self.padding(target, self.max_tl)
 
         return (sent, target)
 
@@ -100,13 +96,16 @@ class Dataset(data.Dataset):
         sen_pad = np.pad(sent,(0,max(0, max_len - len(sent))),'constant', constant_values = (self.pad))[:max_len]
         return sen_pad
 
-
+def my_collate(batch):
+    sent = [torch.LongTensor(item[0]) for item in batch]
+    target = [torch.LongTensor(item[1]) for item in batch]
+    return [sent, target]
     
 
 if __name__ == "__main__":
     my_dict, sents, targets = raw_data()
     my_data = Dataset(sents, targets, my_dict.word_to_ix)
-    loader = data.DataLoader(dataset=my_data, batch_size=32, shuffle=False)
+    loader = data.DataLoader(dataset=my_data, batch_size=32, shuffle=False, collate_fn=my_collate)
     max = 0
     for s, t in zip(sents, targets):
         if len(s)>max:
