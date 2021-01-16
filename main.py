@@ -49,7 +49,7 @@ if __name__ == '__main__':
                       embed_size=dec_embed_size
                      )
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.NLLLoss()
 
     enc_optimizer = torch.optim.Adam(model_encoder.parameters(),lr=learning_rate)
     dec_optimizer = torch.optim.Adam(model_decoder.parameters(),lr=learning_rate)
