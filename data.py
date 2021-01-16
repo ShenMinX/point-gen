@@ -24,7 +24,7 @@ class dictionary():
             self.ix_to_word[ix] = word
     
     def insert_mark(self):
-        marks = ["<sos>","<eos>","<UNK>","<pad>"]
+        marks = ["<pad>","<sos>","<eos>","<UNK>"]
         for m in marks:
             self.insert(m)
 
@@ -70,15 +70,14 @@ def raw_data(file_path = 'en\\train.tsv'):
 
 class Dataset(data.Dataset):
 
-    def __init__(self, sents, targets, word_to_ix, max_sl = 200, max_tl = 200):
+    def __init__(self, sents, targets, word_to_ix): # , max_sl = 200, max_tl = 200
         'Initialization'
         self.sents = sents
         self.targets = targets
         self.word_to_ix = word_to_ix
-        #padding_index = 3
+        #padding_index = 0
         self.pad = word_to_ix['<pad>']
-        self.max_sl = max_sl
-        self.max_tl = max_tl
+
     
     def __len__(self):
         return len(self.sents)
@@ -89,12 +88,12 @@ class Dataset(data.Dataset):
         target = self.targets[index] + ['<eos>']
 
         sent, target = list(map(lambda x: words_to_ixs(self.word_to_ix, x),[sent, target]))
-        sent = self.padding(sent, self.max_sl)
-        target = self.padding(target, self.max_tl)
+        sent = np.array(sent)
+        target = np.array(target)
 
         return (sent, target)
 
-    def padding(self, sent, max_len):
+    def padding(self, sent, max_len): # outdated
         sen_pad = np.pad(sent,(0,max(0, max_len - len(sent))),'constant', constant_values = (self.pad))[:max_len]
         return sen_pad
 

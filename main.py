@@ -21,8 +21,7 @@ if __name__ == '__main__':
     dec_embed_size = 128
     enc_hid_size = 256  # out_size = 200
     dec_hid_size = 256
-    max_sl = 6  # max sentence length
-    max_tl = 6  # max target length
+
     learning_rate = 0.0015
 
     lamada = 1  # weight of coverage loss
@@ -30,10 +29,10 @@ if __name__ == '__main__':
     epochs = 10
 
     tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
-    train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix, max_sl=max_sl, max_tl=max_tl)
+    train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
     _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
-    test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix, max_sl=max_sl, max_tl=max_tl) # use train_dictionary!
+    test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False)
     test_loader = data.DataLoader(dataset=test_data, batch_size=32, shuffle=False)
@@ -64,6 +63,13 @@ if __name__ == '__main__':
         for idx, item in enumerate(train_loader):
             
             enc_input, target = [i.type(torch.LongTensor) for i in item]
+
+            enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+            target = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+            max_sl = enc_input.shape[1]  # max sentence length
+            max_tl = target.shape[1]     # max target length
 
             enc_out, enc_hidden = model_encoder(enc_input)
 
@@ -118,6 +124,13 @@ if __name__ == '__main__':
         
             enc_input, target = [i.type(torch.LongTensor) for i in item]
 
+            enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+            target = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+            max_sl = enc_input.shape[1]  # max sentence length
+            max_tl = target.shape[1]     # max target length
+
             targets = torch.cat([targets, target], dim=0)
 
             enc_out, enc_hidden = model_encoder(enc_input)
@@ -157,7 +170,7 @@ if __name__ == '__main__':
         print('test set total loss: %f, total coverage loss: %f '% (total_loss, total_coverage_loss))
         final_preds = []
         final_targets = []
-        print(preds) # for pseudo_data, suppose output [[5, 1, 3, 3,...,3],...,[5, 1, 3, 3,...,3]]
+        print(preds) # for pseudo_data, suppose output [[4,2],...,[4,2]]
         # unpad for evaluation
         for i in range(batch_size):
             final_pred = preds[i,:][preds[i,:]!=tr_dict.word_to_ix['<pad>']].tolist()
