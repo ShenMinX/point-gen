@@ -58,7 +58,6 @@ if __name__ == '__main__':
     # train
     for e in range(epochs):
         total_loss = 0.0
-        total_coverage_loss = 0.0
 
         for idx, item in enumerate(train_loader):
             
@@ -80,13 +79,12 @@ if __name__ == '__main__':
             with torch.no_grad():
                 rnn_hid = (torch.zeros(batch_size,dec_hid_size),torch.zeros(batch_size,dec_hid_size)) # default init_hidden_value
                 attn = torch.ones(batch_size, max_sl) # init_attn
-                coverage = torch.zeros(batch_size, max_sl) # init_coverage
-            
+
             
             batch_loss = 0.0
             for i in range(max_tl):
 
-                output, coverage, rnn_hid, attn, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input, attn)
+                output, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
@@ -97,7 +95,7 @@ if __name__ == '__main__':
 
                 p_step_loss = criterion(output, target[:,i])
 
-                batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
+                batch_loss = batch_loss + p_step_loss
             
 
             enc_optimizer.zero_grad()
@@ -108,15 +106,13 @@ if __name__ == '__main__':
 
             with torch.no_grad():
                 total_loss += batch_loss
-                total_coverage_loss += coverage_loss
-        print('%d: total loss= %f, total coverage loss= %f '% (e+1,total_loss, total_coverage_loss))
+        print('%d: total loss= %f'% (e+1,total_loss))
     
         
 
     # test
     with torch.no_grad():
         total_loss = 0.0
-        total_coverage_loss = 0.0
         preds = torch.tensor([],dtype=torch.long)
         targets = torch.tensor([],dtype=torch.long)
         
@@ -142,14 +138,13 @@ if __name__ == '__main__':
             rnn_hid = (torch.zeros(batch_size,dec_hid_size),torch.zeros(batch_size,dec_hid_size)) # default init_hidden_value
             
             attn = torch.ones(batch_size, max_sl) # init_attn
-            coverage = torch.zeros(batch_size, max_sl) # init_coverage
 
             
             pred = torch.tensor([],dtype=torch.long)
             batch_loss = 0.0
             for i in range(max_tl):
 
-                output, coverage, rnn_hid, attn, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input, attn)
+                output,  rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
@@ -159,15 +154,14 @@ if __name__ == '__main__':
 
                 p_step_loss = criterion(output, target[:,i])
 
-                batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
+                batch_loss = batch_loss + p_step_loss
 
             
             total_loss += batch_loss
-            total_coverage_loss += coverage_loss
 
             preds = torch.cat([preds,pred], dim=0)
 
-        print('test set total loss: %f, total coverage loss: %f '% (total_loss, total_coverage_loss))
+        print('test set total loss: %f'% (total_loss))
         final_preds = []
         final_targets = []
         print(preds) # for pseudo_data, suppose output [[4,2],...,[4,2]]
