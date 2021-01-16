@@ -81,7 +81,7 @@ class Decoder(nn.Module):
         attn_scores = torch.zeros(batch_size, self.vocab_size)
         attn_scores = attn_scores.scatter_(1, enc_inputs, attn) # index: enc_inputs, content: attn 
 
-        output = torch.log(p_gen*p_vocab + (1-p_gen)*attn_scores) # batch x vocab_size
+        output = p_gen*p_vocab + (1-p_gen)*attn_scores # batch x vocab_size
 
 
         return output, rnn_hid, attn
