@@ -142,8 +142,8 @@ if __name__ == '__main__':
                 dec_optimizer.step()
 
                 with torch.no_grad():
-                    total_loss += batch_loss
-                    total_coverage_loss += coverage_loss
+                    total_loss += float(batch_loss)
+                    total_coverage_loss += float(coverage_loss)
             print('%d: total loss= %f, total coverage loss= %f '% (e+old_epoch+1,total_loss, total_coverage_loss))
 
             torch.save({
@@ -206,8 +206,8 @@ if __name__ == '__main__':
                 batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
 
             
-            total_loss += batch_loss
-            total_coverage_loss += coverage_loss
+            total_loss += float(batch_loss)
+            total_coverage_loss += float(coverage_loss)
 
 
 
