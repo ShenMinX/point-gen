@@ -12,9 +12,15 @@ from rouge import rouge_l_summary_level
 from encoder import Encoder
 from decoder import Decoder
 
+if torch.cuda.is_available():  
+    dev = "cuda:0" 
+else:  
+    dev = "cpu"
+device = torch.device(dev)
+
 def my_collate(batch):
-    sent = [torch.LongTensor(item[0]) for item in batch]
-    target = [torch.LongTensor(item[1]) for item in batch]
+    sent = [torch.LongTensor(item[0]).to(device) for item in batch]
+    target = [torch.LongTensor(item[1]).to(device) for item in batch]
     return [sent, target]
 
 if __name__ == '__main__':
@@ -38,20 +44,21 @@ if __name__ == '__main__':
     _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
-    train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False, collate_fn=my_collate)
-    test_loader = data.DataLoader(dataset=test_data, batch_size=32, shuffle=False, collate_fn=my_collate)
+    train_loader = data.DataLoader(dataset=train_data, batch_size=24, shuffle=False, collate_fn=my_collate)
+    test_loader = data.DataLoader(dataset=test_data, batch_size=24, shuffle=False, collate_fn=my_collate)
     
     model_encoder = Encoder(
                       vocab=tr_dict.word_to_ix, 
                       hidden_size=enc_hid_size, 
-                      embed_size=enc_embed_size)
+                      embed_size=enc_embed_size
+                      ).to(device)
 
     model_decoder = Decoder(
                       vocab=tr_dict.word_to_ix, 
                       encode_size=enc_hid_size*2, 
                       hidden_size=dec_hid_size, 
                       embed_size=dec_embed_size
-                     )
+                     ).to(device)
 
     criterion = nn.NLLLoss()
 
@@ -78,11 +85,11 @@ if __name__ == '__main__':
 
             batch_size = enc_input.shape[0]
 
-            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).view(batch_size, 1)
+            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).to(device).view(batch_size, 1)
 
             with torch.no_grad():
-                rnn_hid = (torch.zeros(batch_size,dec_hid_size),torch.zeros(batch_size,dec_hid_size)) # default init_hidden_value
-                attn = torch.ones(batch_size, max_sl) # init_attn
+                rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
+                attn = torch.ones(batch_size, max_sl).to(device) # init_attn
 
             
             batch_loss = 0.0
@@ -135,13 +142,13 @@ if __name__ == '__main__':
 
             batch_size = enc_input.shape[0]
 
-            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).view(batch_size, 1)
+            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).to(device).view(batch_size, 1)
 
-            rnn_hid = (torch.zeros(batch_size,dec_hid_size),torch.zeros(batch_size,dec_hid_size)) # default init_hidden_value
+            rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
             
-            attn = torch.ones(batch_size, max_sl) # init_attn
+            attn = torch.ones(batch_size, max_sl).to(device) # init_attn
 
-            pred = torch.tensor([],dtype=torch.long)
+            pred = torch.tensor([],dtype=torch.long).to(device)
             batch_loss = 0.0
             for i in range(max_tl):
 
