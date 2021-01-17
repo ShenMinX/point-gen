@@ -75,9 +75,7 @@ class Decoder(nn.Module):
         unnormalized_out = self.v(rnn_out)
 
         attn = self.attn(enc_out, rnn_out)
-        
-        attn_scores = torch.zeros(batch_size, self.vocab_size)
-        attn_scores = attn_scores.scatter_(1, enc_inputs, attn) # index: enc_inputs, content: attn 
+
 
 # batch x vocab_size
 
