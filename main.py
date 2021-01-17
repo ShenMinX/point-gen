@@ -24,7 +24,9 @@ def my_collate(batch):
     return [sent, target]
 
 if __name__ == '__main__':
-    
+
+    train = True
+
     # hyperparameters
 
     enc_embed_size = 128
@@ -35,13 +37,16 @@ if __name__ == '__main__':
     learning_rate = 0.0015
 
     lamada = 1  # weight of coverage loss
-
+    
     epochs = 10
+    old_epoch = 0 # previosuly trained epochs
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv')
+    model_path = 'model_paremeters.pth'
+
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
+    _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False, collate_fn=my_collate)
@@ -65,68 +70,93 @@ if __name__ == '__main__':
     enc_optimizer = torch.optim.Adam(model_encoder.parameters(),lr=learning_rate)
     dec_optimizer = torch.optim.Adam(model_decoder.parameters(),lr=learning_rate)
 
+    try:
+        checkpoint = torch.load(model_path)
+        model_encoder.load_state_dict(checkpoint['encoder_state_dict'])
+        model_decoder.load_state_dict(checkpoint['decoder_state_dict'])
+        enc_optimizer.load_state_dict(checkpoint['enc_optimizer_state_dict'])
+        dec_optimizer.load_state_dict(checkpoint['dec_optimizer_state_dict'])
+        old_epoch = checkpoint['epoch']
+        model_encoder.to(device)
+        model_decoder.to(device)
+    
+    except FileNotFoundError:
+        train = True
 
-    # train
-    for e in range(epochs):
-        total_loss = 0.0
-        total_coverage_loss = 0.0
+    
+    if train == True:
+        model_encoder.train()
+        model_decoder.train()
+        # train
+        for e in range(epochs):
+            total_loss = 0.0
+            total_coverage_loss = 0.0
 
-        for idx, item in enumerate(train_loader):
+            for idx, item in enumerate(train_loader):
 
-            enc_input, target = [i for i in item]
+                enc_input, target = [i for i in item]
 
-            enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+                enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
 
-            target = nn.utils.rnn.pad_sequence(target, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+                target = nn.utils.rnn.pad_sequence(target, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
 
-            max_sl = enc_input.shape[1]  # max sentence length
-            max_tl = target.shape[1]     # max target length
+                max_sl = enc_input.shape[1]  # max sentence length
+                max_tl = target.shape[1]     # max target length
 
-            enc_out, enc_hidden = model_encoder(enc_input)
+                enc_out, enc_hidden = model_encoder(enc_input)
 
-            batch_size = enc_input.shape[0]
+                batch_size = enc_input.shape[0]
 
-            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).to(device).view(batch_size, 1)
+                dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).to(device).view(batch_size, 1)
 
-            with torch.no_grad():
-                rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
-                attn = torch.ones(batch_size, max_sl).to(device) # init_attn
-                coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
-            
-            
-            batch_loss = 0.0
-            for i in range(max_tl):
-
-                output, coverage, rnn_hid, attn, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input, attn)
+                with torch.no_grad():
+                    rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
+                    attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+                    coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
                 
-                _, dec_pred = torch.max(output, 1) # batch_size vector
+                
+                batch_loss = 0.0
+                for i in range(max_tl):
 
-                if random.randint(0, 11) > 5:          
-                    dec_input = target[:,i].view(batch_size, 1)
-                else:
-                    dec_input = dec_pred.view(batch_size, 1)
+                    output, coverage, rnn_hid, attn, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input, attn)
+                    
+                    _, dec_pred = torch.max(output, 1) # batch_size vector
 
-                p_step_loss = -torch.log(-criterion(output, target[:,i]))
+                    if random.randint(0, 11) > 5:          
+                        dec_input = target[:,i].view(batch_size, 1)
+                    else:
+                        dec_input = dec_pred.view(batch_size, 1)
 
-                batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
-            
+                    p_step_loss = -torch.log(-criterion(output, target[:,i]))
 
-            enc_optimizer.zero_grad()
-            dec_optimizer.zero_grad()
-            batch_loss.backward()
-            enc_optimizer.step()
-            dec_optimizer.step()
+                    batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
+                
 
-            with torch.no_grad():
-                total_loss += batch_loss
-                total_coverage_loss += coverage_loss
-        print('%d: total loss= %f, total coverage loss= %f '% (e+1,total_loss, total_coverage_loss))
-    
+                enc_optimizer.zero_grad()
+                dec_optimizer.zero_grad()
+                batch_loss.backward()
+                enc_optimizer.step()
+                dec_optimizer.step()
+
+                with torch.no_grad():
+                    total_loss += batch_loss
+                    total_coverage_loss += coverage_loss
+            print('%d: total loss= %f, total coverage loss= %f '% (e+old_epoch+1,total_loss, total_coverage_loss))
+
+            torch.save({
+            'epoch': epochs,
+            'encoder_state_dict': model_encoder.state_dict(),
+            'decoder_state_dict': model_decoder.state_dict(),
+            'enc_optimizer_state_dict': enc_optimizer.state_dict(),
+            'dec_optimizer_state_dict': dec_optimizer.state_dict(),
+            }, model_path)
+
+        train = False
         
-
-    # test
-    
-    with torch.no_grad():
+    if train == False:
+        model_encoder.eval()
+        model_decoder.eval()
+        # test   
         total_loss = 0.0
         total_coverage_loss = 0.0
         final_preds = []
@@ -195,7 +225,7 @@ if __name__ == '__main__':
         
         # _, _, rouge_l = rouge_l_summary_level(final_preds, final_targets) # extremely time consuming...
         # print('ROUGE-L: %f' % rouge_l)
-    
+        
 
         
 
