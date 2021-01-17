@@ -32,10 +32,10 @@ if __name__ == '__main__':
 
     epochs = 10
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv')
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False, collate_fn=my_collate)
