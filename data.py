@@ -37,6 +37,12 @@ def words_to_ixs(word_to_ix, words):
         else:
             out.append(word_to_ix["<UNK>"])
     return out
+
+def ixs_to_words(ix_to_word, ixs):
+    out = []
+    for w in ixs:
+        out.append(ix_to_word[w])
+    return out
     
 
 def raw_data(file_path = 'en\\train.tsv'):

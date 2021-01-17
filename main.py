@@ -3,7 +3,7 @@ import torch.nn as nn
 
 import random
 
-from data import raw_data, Dataset
+from data import raw_data, Dataset, ixs_to_words
 import torch.utils.data as data
 
 from rouge import rouge_n_summary_level
@@ -25,32 +25,32 @@ def my_collate(batch):
 
 if __name__ == '__main__':
 
-    train = True
+    train = False
 
     # hyperparameters
 
     enc_embed_size = 128
     dec_embed_size = 128
-    enc_hid_size = 256  # out_size = 200
+    enc_hid_size = 256  # out_size = 512
     dec_hid_size = 256
 
     learning_rate = 0.0015
 
-    lamada = 1  # weight of coverage loss
+    lamada = 2  # weight of coverage loss
     
     epochs = 10
     old_epoch = 0 # previosuly trained epochs
 
     model_path = 'model_paremeters.pth'
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv')
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
-    train_loader = data.DataLoader(dataset=train_data, batch_size=32, shuffle=False, collate_fn=my_collate)
-    test_loader = data.DataLoader(dataset=test_data, batch_size=32, shuffle=False, collate_fn=my_collate)
+    train_loader = data.DataLoader(dataset=train_data, batch_size=16, shuffle=False, collate_fn=my_collate)
+    test_loader = data.DataLoader(dataset=test_data, batch_size=16, shuffle=False, collate_fn=my_collate)
     
     model_encoder = Encoder(
                       vocab=tr_dict.word_to_ix, 
@@ -71,17 +71,17 @@ if __name__ == '__main__':
     dec_optimizer = torch.optim.Adam(model_decoder.parameters(),lr=learning_rate)
 
     try:
-        checkpoint = torch.load(model_path)
+        checkpoint = torch.load(model_path, map_location=device)
         model_encoder.load_state_dict(checkpoint['encoder_state_dict'])
         model_decoder.load_state_dict(checkpoint['decoder_state_dict'])
         enc_optimizer.load_state_dict(checkpoint['enc_optimizer_state_dict'])
         dec_optimizer.load_state_dict(checkpoint['dec_optimizer_state_dict'])
         old_epoch = checkpoint['epoch']
-        model_encoder.to(device)
-        model_decoder.to(device)
+
     
     except FileNotFoundError:
         train = True
+
 
     
     if train == True:
@@ -214,8 +214,9 @@ if __name__ == '__main__':
                 final_targets.append(final_target)
                 
         print('test set total loss: %f, total coverage loss: %f '% (total_loss, total_coverage_loss))
-
-        print(final_preds)# for pseudo_data, suppose output [[5,2],...,[5,2]]        
+        
+        print(ixs_to_words(tr_dict.ix_to_word, final_preds[0]))
+        print(ixs_to_words(tr_dict.ix_to_word, final_targets[0]))# for pseudo_data, suppose output [[5,2],...,[5,2]]        
         # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
         _, _, rouge_1 = rouge_n_summary_level(final_preds, final_targets, 1)
         print('ROUGE-1: %f' % rouge_1)
