@@ -4,18 +4,21 @@ from data import raw_data, Dataset
 import torch.utils.data as data
 
 class Encoder(nn.Module):
-    def __init__(self, vocab, hidden_size = 30, embed_size = 20):
+    def __init__(self, vocab, hidden_size = 30, embed_size = 20, dropout_p = 0.5):
         super(Encoder, self).__init__()
     
         self.vocab_size = len(vocab)
         self.hidden_size = hidden_size
         self.embed_size = embed_size
+        self.dropout_p = dropout_p
+        self.dropout = nn.Dropout(dropout_p)
         self.embedding = torch.nn.Embedding(num_embeddings = self.vocab_size, embedding_dim = embed_size, padding_idx=vocab['<pad>'])
         self.lstm = nn.LSTM(input_size = embed_size, hidden_size = hidden_size, bidirectional=True, batch_first=True)
 
     def forward(self, inputs):
         
         embed = self.embedding(inputs)
+        embed = self.dropout(embed)
         output, hidden = self.lstm(embed) 
 
         return output, hidden

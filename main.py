@@ -55,7 +55,7 @@ if __name__ == '__main__':
     model_encoder = Encoder(
                       vocab=tr_dict.word_to_ix, 
                       hidden_size=enc_hid_size, 
-                      embed_size=enc_embed_size).to(device)
+                      embed_size=enc_embed_size)
 
     model_decoder = Decoder(
                       vocab=tr_dict.word_to_ix, 
@@ -63,12 +63,13 @@ if __name__ == '__main__':
                       hidden_size=dec_hid_size, 
                       embed_size=dec_embed_size,
                       device=device
-                     ).to(device)
+                     )
 
     criterion = nn.NLLLoss()
 
     enc_optimizer = torch.optim.Adam(model_encoder.parameters(),lr=learning_rate)
     dec_optimizer = torch.optim.Adam(model_decoder.parameters(),lr=learning_rate)
+    
 
     try:
         checkpoint = torch.load(model_path, map_location=device)
@@ -85,6 +86,8 @@ if __name__ == '__main__':
 
     
     if train == True:
+        model_encoder.to(device)
+        model_decoder.to(device)
         model_encoder.train()
         model_decoder.train()
         # train
@@ -152,8 +155,10 @@ if __name__ == '__main__':
             }, model_path)
 
         train = False
-        
+    
     if train == False:
+        model_encoder.to(device)
+        model_decoder.to(device)
         model_encoder.eval()
         model_decoder.eval()
         # test   
