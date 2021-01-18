@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     learning_rate = 0.0015
 
-    lamada = 2  # weight of coverage loss
+    lamada = 1  # weight of coverage loss
     
     epochs = 10
     old_epoch = 0 # previosuly trained epochs
@@ -55,7 +55,8 @@ if __name__ == '__main__':
     model_encoder = Encoder(
                       vocab=tr_dict.word_to_ix, 
                       hidden_size=enc_hid_size, 
-                      embed_size=enc_embed_size)
+                      embed_size=enc_embed_size
+                      ).to(device)
 
     model_decoder = Decoder(
                       vocab=tr_dict.word_to_ix, 
@@ -63,7 +64,7 @@ if __name__ == '__main__':
                       hidden_size=dec_hid_size, 
                       embed_size=dec_embed_size,
                       device=device
-                     )
+                     ).to(device)
 
     criterion = nn.NLLLoss()
 
@@ -86,8 +87,6 @@ if __name__ == '__main__':
 
     
     if train == True:
-        model_encoder.to(device)
-        model_decoder.to(device)
         model_encoder.train()
         model_decoder.train()
         # train
@@ -157,8 +156,6 @@ if __name__ == '__main__':
         train = False
     
     if train == False:
-        model_encoder.to(device)
-        model_decoder.to(device)
         model_encoder.eval()
         model_decoder.eval()
         # test   
