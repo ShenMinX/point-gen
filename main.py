@@ -29,19 +29,19 @@ if __name__ == '__main__':
 
     enc_embed_size = 128
     dec_embed_size = 128
-    enc_hid_size = 256  # out_size = 200
+    enc_hid_size = 256  # out_size = 512
     dec_hid_size = 256
 
     learning_rate = 0.0015
 
     lamada = 1  # weight of coverage loss
 
-    epochs = 10
+    epochs = 20
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv')
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=24, shuffle=False, collate_fn=my_collate)
@@ -57,7 +57,8 @@ if __name__ == '__main__':
                       vocab=tr_dict.word_to_ix, 
                       encode_size=enc_hid_size*2, 
                       hidden_size=dec_hid_size, 
-                      embed_size=dec_embed_size
+                      embed_size=dec_embed_size,
+                      device = device
                      ).to(device)
 
     criterion = nn.NLLLoss()
@@ -177,7 +178,7 @@ if __name__ == '__main__':
       
         print('test set total loss: %f'% (total_loss))
 
-        print(final_preds) # for pseudo_data, suppose output [[4,2],...,[4,2]]
+        print(final_preds) # for pseudo_data, suppose output [[5,2],...,[5,2]]
         # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
         _, _, rouge_1 = rouge_n_summary_level(final_preds, final_targets, 1)
         print('ROUGE-1: %f' % rouge_1)
