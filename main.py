@@ -146,7 +146,7 @@ if __name__ == '__main__':
             print('%d: total loss= %f, total coverage loss= %f '% (e+old_epoch+1,total_loss, total_coverage_loss))
 
             torch.save({
-            'epoch': epochs,
+            'epoch': old_epoch+e+1,
             'encoder_state_dict': model_encoder.state_dict(),
             'decoder_state_dict': model_decoder.state_dict(),
             'enc_optimizer_state_dict': enc_optimizer.state_dict(),
