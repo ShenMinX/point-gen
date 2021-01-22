@@ -125,7 +125,6 @@ if __name__ == '__main__':
     with torch.no_grad():
         total_loss = 0.0
         final_preds = []
-        final_targets = []
         
         for idx, item in enumerate(test_loader):        
         
