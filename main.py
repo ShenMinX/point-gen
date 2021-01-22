@@ -131,7 +131,7 @@ if __name__ == '__main__':
         total_loss = 0.0
         total_coverage_loss = 0.0
         final_preds = []
-        final_targets = []
+
         for idx, item in enumerate(test_loader):        
         
             enc_input, target = [i for i in item]
