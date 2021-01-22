@@ -37,7 +37,14 @@ def words_to_ixs(word_to_ix, words):
         else:
             out.append(word_to_ix["<UNK>"])
     return out
-    
+
+
+def ixs_to_words(ix_to_word, ixs):
+    out = []
+    for w in ixs:
+        out.append(ix_to_word[w])
+    return out   
+
 
 def raw_data(file_path = 'en\\test_2k.tsv'):
 
@@ -53,11 +60,13 @@ def raw_data(file_path = 'en\\test_2k.tsv'):
             if row['label'] == '1':
                 #sent = re.split(" ", row['sentsence1'])
                 sent = [w.group(0).lower() for w in re.finditer(r"\S+", row['sentsence1'])]
+                sent.append('<eos>')
                 sents.append(sent)
                 for w1 in sent:
                     my_dictionary.insert(w1.lower())
                 #target = re.split(" ", row['sentsence2'])
                 target = [w.group(0).lower() for w in re.finditer(r"\S+", row['sentsence2'])]
+                target.append('<eos>')
                 targets.append(target)
                 for w2 in target:
                     my_dictionary.insert(w2.lower())
@@ -85,8 +94,8 @@ class Dataset(data.Dataset):
 
     def __getitem__(self, index):
         
-        sent = self.sents[index] + ['<eos>']
-        target = self.targets[index] + ['<eos>']
+        sent = self.sents[index]
+        target = self.targets[index]
 
         sent, target = list(map(lambda x: words_to_ixs(self.word_to_ix, x),[sent, target]))
 

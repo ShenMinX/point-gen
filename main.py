@@ -3,7 +3,7 @@ import torch.nn as nn
 
 import random
 
-from data import raw_data, Dataset
+from data import raw_data, Dataset, ixs_to_words
 import torch.utils.data as data
 
 from rouge import rouge_n_summary_level
@@ -34,13 +34,13 @@ if __name__ == '__main__':
 
     learning_rate = 0.0015
 
-    epochs = 20
+    epochs = 10
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv')
-    train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix)  #, max_sl=max_sl, max_tl=max_tl
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv') # pseudo_data.tsv
+    train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
-    test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary! #, max_sl=max_sl, max_tl=max_tl
+    _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=24, shuffle=False, collate_fn=my_collate)
     test_loader = data.DataLoader(dataset=test_data, batch_size=24, shuffle=False, collate_fn=my_collate)
@@ -170,21 +170,20 @@ if __name__ == '__main__':
             total_loss += float(batch_loss)
 
 
-        # unpad for evaluation
-        for b in range(batch_size):
-            final_pred = pred[b,:][pred[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
-            final_preds.append(final_pred)
-            final_target = target[b,:][target[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
-            final_targets.append(final_target)
+            # unpad for evaluation
+            for b in range(batch_size):
+                final_pred = pred[b,:][pred[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
+                final_preds.append(ixs_to_words(tr_dict.ix_to_word, final_pred))
         
         print('test set total loss: %f '% (total_loss))
         
-        print(final_targets) # for pseudo_data, suppose output [[5, 2],...,[5, 2]]
+        print(final_preds[0])
+        print(te_targets[0]) # for pseudo_data, suppose output ['b', '<eos>']
         # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
-        _, _, rouge_1 = rouge_n_summary_level(final_preds, final_targets, 1)
+        _, _, rouge_1 = rouge_n_summary_level(final_preds, te_targets, 1)
         print('ROUGE-1: %f' % rouge_1)
 
-        _, _, rouge_2 = rouge_n_summary_level(final_preds, final_targets, 2)
+        _, _, rouge_2 = rouge_n_summary_level(final_preds, te_targets, 2)
         print('ROUGE-2: %f' % rouge_2)
         
         # _, _, rouge_l = rouge_l_summary_level(final_preds, final_targets) # extremely time consuming...
