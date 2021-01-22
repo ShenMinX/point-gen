@@ -162,7 +162,7 @@ if __name__ == '__main__':
         total_loss = 0.0
         total_coverage_loss = 0.0
         final_preds = []
-        final_targets = []
+
         for idx, item in enumerate(test_loader):        
         
             enc_input, target = [i for i in item]
@@ -216,7 +216,7 @@ if __name__ == '__main__':
         print('test set total loss: %f, total coverage loss: %f '% (total_loss, total_coverage_loss))
         
         print(final_preds[0])
-        print(te_targets[0])# for pseudo_data, suppose output [[5,2],...,[5,2]]        
+        print(te_targets[0])# for pseudo_data, suppose output ['b', '<eos>']        
         # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
         _, _, rouge_1 = rouge_n_summary_level(final_preds, te_targets, 1)
         print('ROUGE-1: %f' % rouge_1)
