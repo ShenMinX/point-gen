@@ -211,19 +211,17 @@ if __name__ == '__main__':
         # unpad for evaluation
             for b in range(batch_size):
                 final_pred = pred[b,:][pred[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
-                final_preds.append(final_pred)
-                final_target = target[b,:][target[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
-                final_targets.append(final_target)
+                final_preds.append(ixs_to_words(tr_dict.ix_to_word, final_pred))
                 
         print('test set total loss: %f, total coverage loss: %f '% (total_loss, total_coverage_loss))
         
-        print(ixs_to_words(tr_dict.ix_to_word, final_preds[0]))
-        print(ixs_to_words(tr_dict.ix_to_word, final_targets[0]))# for pseudo_data, suppose output [[5,2],...,[5,2]]        
+        print(final_preds[0])
+        print(te_targets[0])# for pseudo_data, suppose output [[5,2],...,[5,2]]        
         # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
-        _, _, rouge_1 = rouge_n_summary_level(final_preds, final_targets, 1)
+        _, _, rouge_1 = rouge_n_summary_level(final_preds, te_targets, 1)
         print('ROUGE-1: %f' % rouge_1)
 
-        _, _, rouge_2 = rouge_n_summary_level(final_preds, final_targets, 2)
+        _, _, rouge_2 = rouge_n_summary_level(final_preds, te_targets, 2)
         print('ROUGE-2: %f' % rouge_2)
         
         # _, _, rouge_l = rouge_l_summary_level(final_preds, final_targets) # extremely time consuming...
