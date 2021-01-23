@@ -76,11 +76,9 @@ class Decoder(nn.Module):
     
         ctxt_embed = torch.cat([context, embed], 2).view(batch_size, -1)
 
-        h_t, c_t = self.lstm(ctxt_embed, rnn_hid)
+        rnn_out, c_t = self.lstm(ctxt_embed, rnn_hid)
 
-        rnn_out = h_t
-
-        rnn_hid = (h_t, c_t)
+        rnn_hid = (rnn_out, c_t)
 
         p_vocab = torch.softmax(self.v(rnn_out), 1) # batch x hidden_size -> batch x vocab_size
         p_gen = torch.sigmoid(torch.matmul(context, self.wh) + torch.matmul(rnn_out.view(batch_size, 1, -1), self.ws) + torch.matmul(embed, self.wx)) # batch x 1
