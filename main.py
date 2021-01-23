@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     epochs = 20
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv')
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv') # pseudo_data.tsv
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix)  #, max_sl=max_sl, max_tl=max_tl
 
     _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
