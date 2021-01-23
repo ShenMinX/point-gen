@@ -40,11 +40,7 @@ class Attention(nn.Module):
         return attn
 
 class Decoder(nn.Module):
-<<<<<<< HEAD
-    def __init__(self, vocab, encode_size = 60, hidden_size = 30, embed_size = 20):
-=======
     def __init__(self, vocab, encode_size = 60, hidden_size = 30, embed_size = 20, device = torch.device('cpu')):
->>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
         super(Decoder, self).__init__()
         
         self.vocab_size = len(vocab)
