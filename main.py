@@ -38,19 +38,19 @@ if __name__ == '__main__':
 
     lamada = 1  # weight of coverage loss
     
-    epochs = 10
+    epochs = 20
     old_epoch = 0 # previosuly trained epochs
 
     model_path = 'model_paremeters.pth'
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv') # pseudo_data.tsv
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
-    train_loader = data.DataLoader(dataset=train_data, batch_size=16, shuffle=False, collate_fn=my_collate)
-    test_loader = data.DataLoader(dataset=test_data, batch_size=16, shuffle=False, collate_fn=my_collate)
+    train_loader = data.DataLoader(dataset=train_data, batch_size=24, shuffle=False, collate_fn=my_collate)
+    test_loader = data.DataLoader(dataset=test_data, batch_size=24, shuffle=False, collate_fn=my_collate)
     
     model_encoder = Encoder(
                       vocab=tr_dict.word_to_ix, 
