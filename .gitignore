@@ -1,3 +1,4 @@
-model_paremeters.pth 
-*.json
+settings.json
+*.pth
 *.pyc
+.mypy_cache/
