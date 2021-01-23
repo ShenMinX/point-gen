@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     enc_embed_size = 128
     dec_embed_size = 128
-    enc_hid_size = 256  # out_size = 200
+    enc_hid_size = 256  # out_size = 512
     dec_hid_size = 256
 
     learning_rate = 0.0015
@@ -54,10 +54,11 @@ if __name__ == '__main__':
                       vocab=tr_dict.word_to_ix, 
                       encode_size=enc_hid_size*2, 
                       hidden_size=dec_hid_size, 
-                      embed_size=dec_embed_size
+                      embed_size=dec_embed_size,
+                      device=device
                      ).to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.NLLLoss()
 
     enc_optimizer = torch.optim.Adam(model_encoder.parameters(),lr=learning_rate)
     dec_optimizer = torch.optim.Adam(model_decoder.parameters(),lr=learning_rate)
@@ -92,9 +93,7 @@ if __name__ == '__main__':
             batch_loss = 0.0
             for i in range(max_tl):
 
-                unnormalized_out, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
-
-                output = torch.softmax(unnormalized_out, 1) # batch x 1 x hidden_size -> batch x vocab_size
+                output, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn) # batch x vocab_size
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
@@ -103,7 +102,7 @@ if __name__ == '__main__':
                 else:
                     dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(unnormalized_out, target[:,i])
+                p_step_loss = -torch.log(-criterion(output, target[:,i]))
 
                 batch_loss = batch_loss + p_step_loss
             
@@ -149,9 +148,7 @@ if __name__ == '__main__':
             batch_loss = 0.0
             for i in range(max_tl):
 
-                unnormalized_out, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
-
-                output = torch.softmax(unnormalized_out, 1) # batch x 1 x hidden_size -> batch x vocab_size
+                output, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn) # batch x vocab_size
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
@@ -159,7 +156,7 @@ if __name__ == '__main__':
 
                 dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(unnormalized_out, target[:,i])
+                p_step_loss = -torch.log(-criterion(output, target[:,i]))
 
                 batch_loss = batch_loss + p_step_loss 
 
