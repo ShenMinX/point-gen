@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     enc_embed_size = 128
     dec_embed_size = 128
-    enc_hid_size = 256  # out_size = 200
+    enc_hid_size = 256  # out_size = 512
     dec_hid_size = 256
 
     learning_rate = 0.0015
