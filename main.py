@@ -3,7 +3,7 @@ import torch.nn as nn
 
 import random
 
-from data import raw_data, Dataset
+from data import raw_data, Dataset, ixs_to_words
 import torch.utils.data as data
 
 from rouge import rouge_n_summary_level
@@ -12,9 +12,21 @@ from rouge import rouge_l_summary_level
 from encoder import Encoder
 from decoder import Decoder
 
+<<<<<<< HEAD
 def my_collate(batch):
     sent = [torch.LongTensor(item[0]) for item in batch]
     target = [torch.LongTensor(item[1]) for item in batch]
+=======
+if torch.cuda.is_available():  
+    dev = "cuda:0" 
+else:  
+    dev = "cpu"
+device = torch.device(dev) 
+
+def my_collate(batch):
+    sent = [torch.LongTensor(item[0]).to(device) for item in batch]
+    target = [torch.LongTensor(item[1]).to(device) for item in batch]
+>>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
     return [sent, target]
 
 if __name__ == '__main__':
@@ -32,7 +44,11 @@ if __name__ == '__main__':
 
     epochs = 10
 
+<<<<<<< HEAD
     tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
+=======
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\pseudo_data.tsv') # pseudo_data.tsv
+>>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
     _, te_sents, te_targets = raw_data(file_path = 'en\\pseudo_data.tsv')
@@ -44,14 +60,16 @@ if __name__ == '__main__':
     model_encoder = Encoder(
                       vocab=tr_dict.word_to_ix, 
                       hidden_size=enc_hid_size, 
-                      embed_size=enc_embed_size)
+                      embed_size=enc_embed_size
+                      ).to(device)
 
     model_decoder = Decoder(
                       vocab=tr_dict.word_to_ix, 
                       encode_size=enc_hid_size*2, 
                       hidden_size=dec_hid_size, 
-                      embed_size=dec_embed_size
-                     )
+                      embed_size=dec_embed_size,
+                      device=device
+                     ).to(device)
 
     criterion = nn.NLLLoss()
 
@@ -79,12 +97,18 @@ if __name__ == '__main__':
 
             batch_size = enc_input.shape[0]
 
-            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).view(batch_size, 1)
+            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).to(device).view(batch_size, 1)
 
             with torch.no_grad():
+<<<<<<< HEAD
                 rnn_hid = (torch.zeros(batch_size,dec_hid_size),torch.zeros(batch_size,dec_hid_size)) # default init_hidden_value
                 attn = torch.ones(batch_size, max_sl) # init_attn
                 coverage = torch.zeros(batch_size, max_sl) # init_coverage
+=======
+                rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
+                attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+                coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
+>>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
             
             
             batch_loss = 0.0
@@ -111,8 +135,8 @@ if __name__ == '__main__':
             dec_optimizer.step()
 
             with torch.no_grad():
-                total_loss += batch_loss
-                total_coverage_loss += coverage_loss
+                total_loss += float(batch_loss)
+                total_coverage_loss += float(coverage_loss)
         print('%d: total loss= %f, total coverage loss= %f '% (e+1,total_loss, total_coverage_loss))
     
         
@@ -123,15 +147,25 @@ if __name__ == '__main__':
         total_loss = 0.0
         total_coverage_loss = 0.0
         final_preds = []
+<<<<<<< HEAD
         final_targets = []
+=======
+
+>>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
         for idx, item in enumerate(test_loader):        
         
             enc_input, target = [i for i in item]
 
             enc_input = nn.utils.rnn.pad_sequence(enc_input, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+<<<<<<< HEAD
 
             target = nn.utils.rnn.pad_sequence(target, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
 
+=======
+
+            target = nn.utils.rnn.pad_sequence(target, batch_first=True, padding_value=tr_dict.word_to_ix["<pad>"])
+
+>>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
             max_sl = enc_input.shape[1]  # max sentence length
             max_tl = target.shape[1]     # max target length
 
@@ -139,15 +173,19 @@ if __name__ == '__main__':
 
             batch_size = enc_input.shape[0]
 
-            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).view(batch_size, 1)
+            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).to(device).view(batch_size, 1)
 
+<<<<<<< HEAD
             rnn_hid = (torch.zeros(batch_size,dec_hid_size),torch.zeros(batch_size,dec_hid_size)) # default init_hidden_value
+=======
+            rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
+>>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
             
-            attn = torch.ones(batch_size, max_sl) # init_attn
-            coverage = torch.zeros(batch_size, max_sl) # init_coverage
+            attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+            coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
 
             
-            pred = torch.tensor([],dtype=torch.long)
+            pred = torch.tensor([],dtype=torch.long).to(device)
             batch_loss = 0.0
             for i in range(max_tl):
 
@@ -164,10 +202,12 @@ if __name__ == '__main__':
                 batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
 
             
-            total_loss += batch_loss
-            total_coverage_loss += coverage_loss
+            total_loss += float(batch_loss)
+            total_coverage_loss += float(coverage_loss)
 
 
+
+<<<<<<< HEAD
 
         # unpad for evaluation
             for b in range(batch_size):
@@ -184,6 +224,22 @@ if __name__ == '__main__':
         print('ROUGE-1: %f' % rouge_1)
 
         _, _, rouge_2 = rouge_n_summary_level(final_preds, final_targets, 2)
+=======
+        # unpad for evaluation
+            for b in range(batch_size):
+                final_pred = pred[b,:][pred[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
+                final_preds.append(ixs_to_words(tr_dict.ix_to_word, final_pred))
+                
+        print('test set total loss: %f, total coverage loss: %f '% (total_loss, total_coverage_loss))
+
+        print(final_preds[0])
+        print(te_targets[0])# for pseudo_data, suppose output ['b','<eos>']      
+        # dependency: easy-rouge 0.2.2, install: pip install easy-rouge
+        _, _, rouge_1 = rouge_n_summary_level(final_preds, te_targets, 1)
+        print('ROUGE-1: %f' % rouge_1)
+
+        _, _, rouge_2 = rouge_n_summary_level(final_preds, te_targets, 2)
+>>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
         print('ROUGE-2: %f' % rouge_2)
         
         # _, _, rouge_l = rouge_l_summary_level(final_preds, final_targets) # extremely time consuming...

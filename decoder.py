@@ -40,11 +40,16 @@ class Attention(nn.Module):
         return attn
 
 class Decoder(nn.Module):
+<<<<<<< HEAD
     def __init__(self, vocab, encode_size = 60, hidden_size = 30, embed_size = 20):
+=======
+    def __init__(self, vocab, encode_size = 60, hidden_size = 30, embed_size = 20, device = torch.device('cpu')):
+>>>>>>> 8641adc8a50f9dbc7bb48f6378e090985bd1258c
         super(Decoder, self).__init__()
         
         self.vocab_size = len(vocab)
         self.hidden_size = hidden_size
+        self.device = device
 
         self.embedding = torch.nn.Embedding(num_embeddings = self.vocab_size, embedding_dim = embed_size, padding_idx=vocab["<pad>"])
 
@@ -88,7 +93,7 @@ class Decoder(nn.Module):
 
         coverage = coverage + attn
         
-        attn_scores = torch.zeros(batch_size, self.vocab_size)
+        attn_scores = torch.zeros(batch_size, self.vocab_size).to(self.device)
         attn_scores = attn_scores.scatter_(1, enc_inputs, attn) # index: enc_inputs, content: attn 
 
         output = p_gen*p_vocab + (1-p_gen)*attn_scores # batch x vocab_size
