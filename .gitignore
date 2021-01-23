@@ -1,0 +1,4 @@
+settings.json 
+*.pth
+*.pyc
+.mypy_cache/
