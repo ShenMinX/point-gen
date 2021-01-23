@@ -47,10 +47,6 @@ class Decoder(nn.Module):
         self.lstm = nn.LSTMCell(input_size = embed_size + encode_size, hidden_size = hidden_size)
         self.attn = Attention(encode_size = encode_size, hidden_size=hidden_size)
 
-        self.wh = nn.Parameter(torch.rand(encode_size), requires_grad = True)
-        self.ws = nn.Parameter(torch.rand(hidden_size), requires_grad = True)
-        self.wx = nn.Parameter(torch.rand(embed_size), requires_grad = True)
-
         self.v = nn.Linear(hidden_size, self.vocab_size)
     
     def forward(self, enc_out, rnn_hid, dec_input, enc_inputs, attn):
