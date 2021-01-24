@@ -1,4 +1,3 @@
-settings.json 
 *.pth
 *.pyc
-.mypy_cache/
+.mypy_cache/settings.json 
