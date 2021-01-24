@@ -1,3 +1,4 @@
 *.pth
 *.pyc
-.mypy_cache/settings.json 
+.mypy_cache/
+.vscode/settings.json
