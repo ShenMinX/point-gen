@@ -36,10 +36,10 @@ if __name__ == '__main__':
 
     epochs = 20
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\dev_2k.tsv') # pseudo_data.tsv
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv') # pseudo_data.tsv
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix)  #, max_sl=max_sl, max_tl=max_tl
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\dev_2k.tsv')
+    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary! #, max_sl=max_sl, max_tl=max_tl
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=24, shuffle=False, collate_fn=my_collate)
@@ -102,7 +102,7 @@ if __name__ == '__main__':
                 else:
                     dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(output, target[:,i])
+                p_step_loss = -torch.log(-criterion(output, target[:,i]))
 
                 batch_loss = batch_loss + p_step_loss
             
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
                 dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = criterion(output, target[:,i])
+                p_step_loss = -torch.log(-criterion(output, target[:,i]))
 
                 batch_loss = batch_loss + p_step_loss 
 
