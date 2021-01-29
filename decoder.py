@@ -63,10 +63,9 @@ class Decoder(nn.Module):
     
         ctxt_embed = torch.cat([context, embed], 2).view(batch_size, -1)
 
-        h_t, c_t = self.lstm(ctxt_embed, rnn_hid)
+        rnn_out, c_t = self.lstm(ctxt_embed, rnn_hid)
 
-        rnn_hid = (h_t,c_t)
-        rnn_out = h_t
+        rnn_hid = (rnn_out,c_t)
 
         unnormalized_out = self.v(rnn_out)
 
