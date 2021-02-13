@@ -41,7 +41,7 @@ if __name__ == '__main__':
     tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv') # pseudo_data.tsv
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
+    _, te_sents, te_targets = raw_data(file_path = 'en\\dev_2k.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=24, shuffle=False, collate_fn=my_collate)
@@ -110,7 +110,9 @@ if __name__ == '__main__':
                 p_step_loss = -torch.log(-criterion(output, target[:,i]))
 
                 batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
-            
+
+                with torch.no_grad():
+                    total_coverage_loss += lamada*float(coverage_loss)
 
             enc_optimizer.zero_grad()
             dec_optimizer.zero_grad()
@@ -120,7 +122,7 @@ if __name__ == '__main__':
 
             with torch.no_grad():
                 total_loss += float(batch_loss)
-                total_coverage_loss += float(coverage_loss)
+                
         print('%d: total loss= %f, total coverage loss= %f '% (e+1,total_loss, total_coverage_loss))
     
         
@@ -170,9 +172,11 @@ if __name__ == '__main__':
 
                 batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
 
+                total_coverage_loss += lamada*float(coverage_loss)
+
             
             total_loss += float(batch_loss)
-            total_coverage_loss += float(coverage_loss)
+
 
 
 
