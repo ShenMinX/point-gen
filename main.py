@@ -34,15 +34,22 @@ if __name__ == '__main__':
 
     learning_rate = 0.0015
 
-    lamada = 1  # weight of coverage loss
+    lamada = 0.005  # weight of coverage loss
 
     epochs = 20
 
-    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv') # pseudo_data.tsv
-    train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix) 
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
 
-    _, te_sents, te_targets = raw_data(file_path = 'en\\dev_2k.tsv')
+    start.record()
+
+    tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv') # pseudo_data.tsv
+    train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix)
+
+    _, te_sents, te_targets = raw_data(file_path = 'en\\test_2k.tsv')
     test_data = Dataset(te_sents, te_targets, tr_dict.word_to_ix) # use train_dictionary!
+
+    print("Dictionary size: ",len(tr_dict.word_to_ix))
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=24, shuffle=False, collate_fn=my_collate)
     test_loader = data.DataLoader(dataset=test_data, batch_size=24, shuffle=False, collate_fn=my_collate)
@@ -125,11 +132,16 @@ if __name__ == '__main__':
                 
         print('%d: total loss= %f, total coverage loss= %f '% (e+1,total_loss, total_coverage_loss))
     
-        
+    end.record()
+    torch.cuda.synchronize()
+    print("Train time: ",start.elapsed_time(end))    
 
     # test
     
     with torch.no_grad():
+        print("Encoder Parameters:",sum([param.nelement() for param in model_encoder.parameters()]))
+        print("Decoder Parameters:",sum([param.nelement() for param in model_decoder.parameters()]))
+
         total_loss = 0.0
         total_coverage_loss = 0.0
         final_preds = []
@@ -196,8 +208,8 @@ if __name__ == '__main__':
         _, _, rouge_2 = rouge_n_summary_level(final_preds, te_targets, 2)
         print('ROUGE-2: %f' % rouge_2)
         
-        # _, _, rouge_l = rouge_l_summary_level(final_preds, final_targets) # extremely time consuming...
-        # print('ROUGE-L: %f' % rouge_l)
+        _, _, rouge_l = rouge_l_summary_level(final_preds, te_targets) # extremely time consuming...
+        print('ROUGE-L: %f' % rouge_l)
     
 
         
