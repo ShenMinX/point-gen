@@ -100,9 +100,9 @@ class Dataset(data.Dataset):
 
         return (sent, target)
 
-    def padding(self, sent, max_len): # outdated
-        sen_pad = np.pad(sent,(0,max(0, max_len - len(sent))),'constant', constant_values = (self.pad))[:max_len]
-        return sen_pad
+def padding(sent, max_len, pad_value = 0):
+    sen_pad = np.pad(sent,(0,max(0, max_len - len(sent))),'constant', constant_values = (pad_value))[:max_len]
+    return sen_pad
 
 
 def my_collate(batch):
