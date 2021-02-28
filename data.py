@@ -57,21 +57,20 @@ def raw_data(file_path = 'en\\train.tsv'):
         for i, row in enumerate(reader):
             if i ==0:
                 continue
+            #sent = re.split(" ", row['sentsence1'])
+            sent = [w.group(0).lower() for w in re.finditer(r"\S+", row['sentsence1'])]
+            #target = re.split(" ", row['sentsence2'])
+            target = [w.group(0).lower() for w in re.finditer(r"\S+", row['sentsence2'])]
             if row['label'] == '1':
-                #sent = re.split(" ", row['sentsence1'])
-                sent = [w.group(0).lower() for w in re.finditer(r"\S+", row['sentsence1'])]
-                sent.append("<eos>")
+                sent.append('<eos>')
                 sents.append(sent)
-                for w1 in sent:
-                    my_dictionary.insert(w1.lower())
-                #target = re.split(" ", row['sentsence2'])
-                target = [w.group(0).lower() for w in re.finditer(r"\S+", row['sentsence2'])]
-                target.append("<eos>")
+                target.append('<eos>')
                 targets.append(target)
-                for w2 in target:
-                    my_dictionary.insert(w2.lower())
-            elif row['label'] != '1':
-                continue
+            for w1 in sent:
+                my_dictionary.insert(w1.lower())
+               
+            for w2 in target:
+                my_dictionary.insert(w2.lower())
                     
     return my_dictionary, sents, targets
 
