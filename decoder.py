@@ -52,7 +52,8 @@ class Decoder(nn.Module):
         self.ws = nn.Parameter(torch.rand(hidden_size), requires_grad = True)
         self.wx = nn.Parameter(torch.rand(embed_size), requires_grad = True)
 
-        self.v = nn.Linear(hidden_size, self.vocab_size)
+        self.v1 = nn.Linear(hidden_size + encode_size, hidden_size)
+        self.v2 = nn.Linear(hidden_size, self.vocab_size)
     
     def forward(self, enc_out, rnn_hid, dec_input, enc_inputs, attn):
         
@@ -72,7 +73,7 @@ class Decoder(nn.Module):
 
         rnn_hid = (rnn_out, c_t)
 
-        p_vocab = torch.softmax(self.v(rnn_out), 1) # batch x hidden_size -> batch x vocab_size
+        p_vocab = torch.softmax(self.v2(self.v1(torch.cat([rnn_out, context.view(batch_size,-1)], 1))), 1) # batch x hidden_size -> batch x vocab_size
         p_gen = torch.sigmoid(torch.matmul(context, self.wh) + torch.matmul(rnn_out.view(batch_size, 1, -1), self.ws) + torch.matmul(embed, self.wx)) # batch x 1
 
         attn = self.attn(enc_out, rnn_out)

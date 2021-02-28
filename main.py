@@ -70,6 +70,7 @@ if __name__ == '__main__':
     enc_optimizer = torch.optim.Adam(model_encoder.parameters(),lr=learning_rate)
     dec_optimizer = torch.optim.Adam(model_decoder.parameters(),lr=learning_rate)
 
+    eps=1e-7
 
     # train
     for e in range(epochs):
@@ -109,7 +110,7 @@ if __name__ == '__main__':
                 else:
                     dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = -torch.log(-criterion(output, target[:,i]))
+                p_step_loss = criterion(torch.log(output + eps), target[:,i])
 
                 batch_loss = batch_loss + p_step_loss
             
@@ -137,6 +138,9 @@ if __name__ == '__main__':
 
         total_loss = 0.0
         final_preds = []
+
+        n_of_w = 0
+        noval = 0
         
         for idx, item in enumerate(test_loader):        
         
@@ -169,7 +173,7 @@ if __name__ == '__main__':
 
                 dec_input = dec_pred.view(batch_size, 1)
 
-                p_step_loss = -torch.log(-criterion(output, target[:,i]))
+                p_step_loss = criterion(torch.log(output + eps), target[:,i])
 
                 batch_loss = batch_loss + p_step_loss 
 
@@ -180,8 +184,15 @@ if __name__ == '__main__':
             # unpad for evaluation
             for b in range(batch_size):
                 final_pred = pred[b,:][pred[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
+                n_of_w += len(final_pred)
+                for wi in final_pred:
+                    if wi not in enc_input[b] and wi !='<eos>':
+                        noval += 1
+
                 final_preds.append(ixs_to_words(tr_dict.ix_to_word, final_pred))
         
+        print('number of tokens: ', n_of_w, ', noval: ', noval)
+
         print('test set total loss: %f '% (total_loss))
         
         print(final_preds[0])
