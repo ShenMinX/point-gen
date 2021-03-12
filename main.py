@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     learning_rate = 0.0015
 
-    lamada = 0.01  # weight of coverage loss
+    lamada = 0.01 # weight of coverage loss
 
     epochs = 20
 
@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
             with torch.no_grad():
                 rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
-                attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+                attn = torch.softmax(torch.ones(batch_size, max_sl), 1).to(device) # init_attn
                 coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
             
             
@@ -169,7 +169,7 @@ if __name__ == '__main__':
 
             rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
             
-            attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+            attn = torch.softmax(torch.ones(batch_size, max_sl), 1).to(device) # init_attn
             coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
 
             
