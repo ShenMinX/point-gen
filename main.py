@@ -99,14 +99,14 @@ if __name__ == '__main__':
 
             with torch.no_grad():
                 rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
-                attn = torch.softmax(torch.ones(batch_size, max_sl), 1).to(device) # init_attn
+                #attn = torch.softmax(torch.ones(batch_size, max_sl), 1).to(device) # init_attn
                 coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
             
             
             batch_loss = 0.0
             for i in range(max_tl):
 
-                output, coverage, rnn_hid, attn, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input, attn)
+                output, coverage, rnn_hid, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input)
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
@@ -169,7 +169,7 @@ if __name__ == '__main__':
 
             rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
             
-            attn = torch.softmax(torch.ones(batch_size, max_sl), 1).to(device) # init_attn
+            #attn = torch.softmax(torch.ones(batch_size, max_sl), 1).to(device) # init_attn
             coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
 
             
@@ -177,7 +177,7 @@ if __name__ == '__main__':
             batch_loss = 0.0
             for i in range(max_tl):
 
-                output, coverage, rnn_hid, attn, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input, attn)
+                output, coverage, rnn_hid, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input)
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 

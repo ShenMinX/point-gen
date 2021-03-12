@@ -59,12 +59,14 @@ class Decoder(nn.Module):
 
         self.v = nn.Linear(hidden_size, self.vocab_size)
     
-    def forward(self, coverage, enc_out, rnn_hid, dec_input, enc_inputs, attn):
+    def forward(self, coverage, enc_out, rnn_hid, dec_input, enc_inputs):
         
         batch_size = enc_out.size(0)
         encode_size = enc_out.size(2)
         sen_len = enc_out.size(1)
         decode_size = self.hidden_size
+
+        attn = self.attn(coverage, enc_out, rnn_hid[0])
 
         attn_transformed = attn.view(batch_size, -1, sen_len) # batch x sen_len -> batch x 1 x sen_len
         context = torch.bmm(attn_transformed, enc_out) # batch x 1 x encode_size
@@ -80,8 +82,6 @@ class Decoder(nn.Module):
         p_vocab = torch.softmax(self.v(rnn_out), 1) # batch x hidden_size -> batch x vocab_size
         p_gen = torch.sigmoid(torch.matmul(context, self.wh) + torch.matmul(rnn_out.view(batch_size, 1, -1), self.ws) + torch.matmul(embed, self.wx)) # batch x 1
 
-        attn = self.attn(coverage, enc_out, rnn_out)
-
         coverage_loss = torch.min(attn, coverage)
         coverage_loss = torch.sum(coverage_loss)
 
@@ -93,7 +93,7 @@ class Decoder(nn.Module):
         output = p_gen*p_vocab + (1-p_gen)*attn_scores # batch x vocab_size
 
 
-        return output, coverage, rnn_hid, attn, coverage_loss
+        return output, coverage, rnn_hid, coverage_loss
 
 
         
