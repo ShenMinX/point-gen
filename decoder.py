@@ -49,12 +49,14 @@ class Decoder(nn.Module):
 
         self.v = nn.Linear(hidden_size, self.vocab_size)
     
-    def forward(self, enc_out, rnn_hid, dec_input, enc_inputs, attn):
+    def forward(self, enc_out, rnn_hid, dec_input, enc_inputs):
         
         batch_size = enc_out.size(0)
         encode_size = enc_out.size(2)
         sen_len = enc_out.size(1)
         decode_size = self.hidden_size
+
+        attn = self.attn(enc_out, rnn_hid[0])
 
         attn_transformed = attn.view(batch_size, -1, sen_len) # batch x sen_len -> batch x 1 x sen_len
         context = torch.bmm(attn_transformed, enc_out) # batch x 1 x encode_size
@@ -69,12 +71,12 @@ class Decoder(nn.Module):
 
         unnormalized_out = self.v(rnn_out)
 
-        attn = self.attn(enc_out, rnn_out)
+        
 
 
 # batch x vocab_size
 
-        return unnormalized_out, rnn_hid, attn
+        return unnormalized_out, rnn_hid
 
 
         

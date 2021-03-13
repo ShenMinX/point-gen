@@ -93,13 +93,13 @@ if __name__ == '__main__':
 
             with torch.no_grad():
                 rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
-                attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+                #attn = torch.ones(batch_size, max_sl).to(device) # init_attn
             
             
             batch_loss = 0.0
             for i in range(max_tl):
 
-                unnormalized_out, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
+                unnormalized_out, rnn_hid = model_decoder(enc_out, rnn_hid, dec_input, enc_input)
 
                 output = torch.softmax(unnormalized_out, 1) # batch x 1 x hidden_size -> batch x vocab_size
                 
@@ -158,13 +158,13 @@ if __name__ == '__main__':
 
             rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
             
-            attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+            #attn = torch.ones(batch_size, max_sl).to(device) # init_attn
             
             pred = torch.tensor([],dtype=torch.long).to(device)
             batch_loss = 0.0
             for i in range(max_tl):
 
-                unnormalized_out, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn)
+                unnormalized_out, rnn_hid = model_decoder(enc_out, rnn_hid, dec_input, enc_input)
 
                 output = torch.softmax(unnormalized_out, 1) # batch x 1 x hidden_size -> batch x vocab_size
                 
