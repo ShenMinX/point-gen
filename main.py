@@ -95,13 +95,13 @@ if __name__ == '__main__':
 
             with torch.no_grad():
                 rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
-                attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+                #attn = torch.ones(batch_size, max_sl).to(device) # init_attn
             
             
             batch_loss = 0.0
             for i in range(max_tl):
 
-                output, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn) # batch x vocab_size
+                output, rnn_hid = model_decoder(enc_out, rnn_hid, dec_input, enc_input) # batch x vocab_size
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
@@ -159,13 +159,13 @@ if __name__ == '__main__':
 
             rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
             
-            attn = torch.ones(batch_size, max_sl).to(device) # init_attn
+            #attn = torch.ones(batch_size, max_sl).to(device) # init_attn
             
             pred = torch.tensor([],dtype=torch.long).to(device)
             batch_loss = 0.0
             for i in range(max_tl):
 
-                output, rnn_hid, attn = model_decoder(enc_out, rnn_hid, dec_input, enc_input, attn) # batch x vocab_size
+                output, rnn_hid = model_decoder(enc_out, rnn_hid, dec_input, enc_input) # batch x vocab_size
                 
                 _, dec_pred = torch.max(output, 1) # batch_size vector
 
