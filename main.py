@@ -38,10 +38,10 @@ if __name__ == '__main__':
 
     epochs = 20
 
-    start = torch.cuda.Event(enable_timing=True)
-    end = torch.cuda.Event(enable_timing=True)
+    #start = torch.cuda.Event(enable_timing=True)
+    #end = torch.cuda.Event(enable_timing=True)
 
-    start.record()
+    #start.record()
 
     tr_dict, tr_sents, tr_targets = raw_data(file_path = 'en\\train.tsv') # pseudo_data.tsv
     train_data = Dataset(tr_sents, tr_targets, tr_dict.word_to_ix)
@@ -133,9 +133,9 @@ if __name__ == '__main__':
                 
         print('%d: total loss= %f, total coverage loss= %f '% (e+1,total_loss, total_coverage_loss))
     
-    end.record()
-    torch.cuda.synchronize()
-    print("Train time: ",start.elapsed_time(end))    
+    #end.record()
+    #torch.cuda.synchronize()
+    #print("Train time: ",start.elapsed_time(end))    
 
     # test
     
