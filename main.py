@@ -150,6 +150,39 @@ if __name__ == '__main__':
         n_of_w = 0
         noval = 0
 
+        beam_size = 3
+
+        def beam_search_decoder2(post, seq_val, seq_idx):
+            """
+                Post: (batch_size, k, vocab_size)
+                seq_val: (batch_size, k, seq_length)
+                seq_idx: (batch_size, k, seq_length)
+
+            """
+
+            batch_size, k, vocab_size = post.shape
+
+            log_post = post.log()
+            val, idx = log_post.topk(k, dim = 2)
+            val = val.unsqueeze(-1)
+            idx = idx.unsqueeze(-1)
+
+            seq_val = seq_val.unsqueeze(2).repeat(1, 1, k, 1) # (batch_size, k, k, seq_length)
+            seq_idx = seq_idx.unsqueeze(2).repeat(1, 1, k, 1)
+
+            list_val = torch.cat((seq_val, val), -1).view(batch_size, k*k, -1)
+            list_idx = torch.cat((seq_idx, idx), -1).view(batch_size, k*k, -1)
+
+            _, rank_idx = list_val.sum(-1).topk(k) # (batch_size, k)
+
+            dummy = rank_idx.unsqueeze(2).expand(rank_idx.size(0), rank_idx.size(1), list_val.size(2))
+            seq_val = torch.gather(list_val, 1, dummy)
+            seq_idx = torch.gather(list_idx, 1, dummy)
+          
+            return seq_val, seq_idx
+            
+
+
         for idx, item in enumerate(test_loader):        
         
             enc_input, target = [i for i in item]
@@ -165,41 +198,48 @@ if __name__ == '__main__':
 
             batch_size = enc_input.shape[0]
 
-            dec_input = torch.tensor([tr_dict.word_to_ix["<sos>"]]*batch_size, dtype=torch.long).to(device).view(batch_size, 1)
+            seq_idx = torch.tensor([[tr_dict.word_to_ix["<sos>"]] * beam_size] * batch_size, dtype=torch.long).to(device).unsqueeze(-1) # (batch_size, beam_size, 1)
+            seq_val = torch.ones(batch_size, beam_size).to(device).unsqueeze(-1)
 
-            rnn_hid = (torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device)) # default init_hidden_value
+            rnn_hid = [(torch.zeros(batch_size,dec_hid_size).to(device),torch.zeros(batch_size,dec_hid_size).to(device))] * beam_size # default init_hidden_value
             
             #attn = torch.softmax(torch.ones(batch_size, max_sl), 1).to(device) # init_attn
-            coverage = torch.zeros(batch_size, max_sl).to(device) # init_coverage
+            coverage = torch.zeros(batch_size, beam_size, max_sl).to(device) # init_coverage
 
             
-            pred = torch.tensor([],dtype=torch.long).to(device)
-            batch_loss = 0.0
+            #pred = torch.tensor([],dtype=torch.long).to(device)
+
             for i in range(max_tl):
 
-                output, coverage, rnn_hid, coverage_loss = model_decoder(coverage, enc_out, rnn_hid, dec_input, enc_input)
+                post = torch.tensor([]).to(device)    
+
+                for k in range(beam_size):
+
+                    dec_input = seq_idx[:, k, -1]
+                    rnn_hid_temp = rnn_hid[k]
+                    coverage_temp = coverage[:, k, :]
+
+                    for j in range(seq_idx.size(2)):
+
+                        output, coverage_temp, rnn_hid_temp, coverage_loss = model_decoder(coverage_temp, enc_out, rnn_hid_temp, dec_input, enc_input)
                 
-                _, dec_pred = torch.max(output, 1) # batch_size vector
+                        #_, dec_pred = torch.max(output, 1) # batch_size vector
 
-                pred = torch.cat([pred, dec_pred.view(batch_size, 1)], dim = 1)
+                        #pred = torch.cat([pred, dec_pred.view(batch_size, 1)], dim = 1)
 
-                dec_input = dec_pred.view(batch_size, 1)
+                        #dec_input = dec_pred.view(batch_size, 1)
+                    post = torch.cat((post, output.unsqueeze(1)), 1)    
+                    
+                seq_val, seq_idx = beam_search_decoder2(post, seq_val, seq_idx)
 
-                p_step_loss = criterion(torch.log(output + eps), target[:,i])
 
-                batch_loss = batch_loss + p_step_loss + lamada*coverage_loss
-
-                total_coverage_loss += lamada*float(coverage_loss)
-
-            
-            total_loss += float(batch_loss)
 
 
 
 
         # unpad for evaluation
             for b in range(batch_size):
-                final_pred = pred[b,:][pred[b,:]!=tr_dict.word_to_ix['<pad>']].tolist()
+                final_pred = seq_idx[b, 0, :][seq_idx[b, 0, :]!=tr_dict.word_to_ix['<pad>']].tolist()
                 n_of_w += len(final_pred)
                 for wi in final_pred:
                     if wi not in enc_input[b] and wi !='<eos>':
@@ -208,8 +248,6 @@ if __name__ == '__main__':
                 final_preds.append(ixs_to_words(tr_dict.ix_to_word, final_pred))
 
         print('number of tokens: ', n_of_w, ', noval: ', noval)
-                
-        print('test set total loss: %f, total coverage loss: %f '% (total_loss, total_coverage_loss))
 
         print(final_preds[0])
         print(te_targets[0])# for pseudo_data, suppose output ['b','<eos>']      
