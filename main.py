@@ -52,7 +52,7 @@ if __name__ == '__main__':
     print("Dictionary size: ",len(tr_dict.word_to_ix))
     
     train_loader = data.DataLoader(dataset=train_data, batch_size=24, shuffle=False, collate_fn=my_collate)
-    test_loader = data.DataLoader(dataset=test_data, batch_size=24, shuffle=False, collate_fn=my_collate)
+    test_loader = data.DataLoader(dataset=test_data, batch_size=10, shuffle=False, collate_fn=my_collate)
     
     model_encoder = Encoder(
                       vocab=tr_dict.word_to_ix, 
@@ -215,7 +215,7 @@ if __name__ == '__main__':
 
                 for k in range(beam_size):
 
-                    dec_input = seq_idx[:, k, -1]
+                    dec_input = seq_idx[:, k, -1].unsqueeze(-1)
                     rnn_hid_temp = rnn_hid[k]
                     coverage_temp = coverage[:, k, :]
 
@@ -228,13 +228,10 @@ if __name__ == '__main__':
                         #pred = torch.cat([pred, dec_pred.view(batch_size, 1)], dim = 1)
 
                         #dec_input = dec_pred.view(batch_size, 1)
+
                     post = torch.cat((post, output.unsqueeze(1)), 1)    
                     
                 seq_val, seq_idx = beam_search_decoder2(post, seq_val, seq_idx)
-
-
-
-
 
 
         # unpad for evaluation
@@ -246,6 +243,8 @@ if __name__ == '__main__':
                         noval += 1
                 
                 final_preds.append(ixs_to_words(tr_dict.ix_to_word, final_pred))
+
+
 
         print('number of tokens: ', n_of_w, ', noval: ', noval)
 
